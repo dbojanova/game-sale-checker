@@ -6,7 +6,13 @@ from nintendo_search import search_nintendo_id
 from add_games import load_watchlist, WATCH_FILE
 from notifier import TOKEN
 
+#make sure that these commands are onlt used in the group chat, not in DMs with the bot
+def is_group(update: Update) -> bool:
+    return str(update.effective_chat.id) == os.getenv("TELEGRAM_GROUP_ID")
+
 async def add(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not is_group(update):
+        return
     if not context.args:
         await update.message.reply_text("Usage: /add <game name>")
         return
@@ -61,6 +67,8 @@ async def pick(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"Added {selected['title']} to watchlist!")
 
 async def list_games(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not is_group(update):
+        return
     watchlist = load_watchlist()
     if not watchlist:
         await update.message.reply_text("Your watchlist is empty.")
@@ -71,6 +79,8 @@ async def list_games(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(response)
 
 async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not is_group(update):
+        return
     if not context.args:
         await update.message.reply_text("Usage: /remove <game title>")
         return
