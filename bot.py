@@ -8,7 +8,7 @@ from notifier import TOKEN
 
 #make sure that these commands are onlt used in the group chat, not in DMs with the bot
 def is_group(update: Update) -> bool:
-    return str(update.effective_chat.id) == os.getenv("TELEGRAM_GROUP_ID")
+    return str(update.effective_chat.id) == os.getenv("TELEGRAM_CHAT_EDITS")
 
 async def add(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_group(update):
