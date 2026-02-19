@@ -1,14 +1,10 @@
 import json
 import os
-from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from nintendo_search import search_nintendo_id
 from add_games import load_watchlist, WATCH_FILE
 from notifier import TOKEN
-
-load_dotenv()
-TOKEN = os.getenv("TELEGRAM_TOKEN")
 
 async def add(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
@@ -17,7 +13,12 @@ async def add(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = " ".join(context.args)
     results = search_nintendo_id(query)
     if not results:
-        await update.message.reply_text("No results found - check spelling.")
+        await update.message.reply_text(
+            "No results found. Add manually?\n"
+            "Reply with: manual <title> | <nsuid>\n"
+            "Or reply 'cancel' to abort."
+        )
+        context.user_data["awaiting_manual"] = True
         return
     response = "Pick a game:\n"
     for i, game in enumerate(results):
@@ -26,6 +27,23 @@ async def add(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(response)
 
 async def pick(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if context.user_data.get("awaiting_manual"):
+        if update.message.text.lower() == "cancel":
+            context.user_data["awaiting_manual"] = False
+            await update.message.reply_text("Cancelled.")
+            return
+        try:
+            text = update.message.text
+            title, nsuid = [x.strip() for x in text.replace("manual ", "").split("|")]
+            watchlist = load_watchlist()
+            watchlist.append({"title": title, "nsuid": nsuid})
+            with open(WATCH_FILE, "w") as f:
+                json.dump(watchlist, f, indent=2)
+            context.user_data["awaiting_manual"] = False
+            await update.message.reply_text(f"Added {title} to watchlist!")
+        except ValueError:
+            await update.message.reply_text("Format: manual <title> | <nsuid>")
+        return
     results = context.user_data.get("results")
     if not results:
         await update.message.reply_text("Search for a game first with /add")
@@ -54,18 +72,18 @@ async def list_games(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
-        await update.message.reply_text("Usage: /remove <number>")
+        await update.message.reply_text("Usage: /remove <game title>")
         return
+    query = " ".join(context.args).lower()
     watchlist = load_watchlist()
-    try:
-        index = int(context.args[0]) - 1
-        removed = watchlist.pop(index)
-    except (ValueError, IndexError):
-        await update.message.reply_text("Invalid number.")
+    match = next((g for g in watchlist if g["title"].lower() == query), None)
+    if not match:
+        await update.message.reply_text(f"No game found matching '{query}'.")
         return
+    watchlist.remove(match)
     with open(WATCH_FILE, "w") as f:
         json.dump(watchlist, f, indent=2)
-    await update.message.reply_text(f"Removed {removed['title']} from watchlist.")
+    await update.message.reply_text(f"Removed {match['title']} from watchlist.")
 
 app = ApplicationBuilder().token(TOKEN).build()
 app.add_handler(CommandHandler("add", add))
