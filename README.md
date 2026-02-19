@@ -1,6 +1,6 @@
 # Is this game on sale?
 
-Have you ever wanted a game on your Switch ... but didn't want to pay full price? Add it to a watchlist and be notified when this happens on your phone via a Telegram bot!
+Have you ever wanted a game on your Switch ... but didn't want to pay full price? Add it to a watchlist and be notified on your phone via a Telegram bot when the game goes on sale!
 
 ## Usage
 
