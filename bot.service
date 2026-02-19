@@ -1,0 +1,12 @@
+[Unit]
+Description=Background running of bot that adds, lists, and removes games from the game sales tracker watchlist via Telegram
+After=network.target
+
+[Service]
+WorkingDirectory=/home/%u/game-sale-checker
+ExecStart=/usr/bin/python3 /home/%u/game-sale-checker/bot.py
+Restart=always
+User=drdorkdawg
+
+[Install]
+WantedBy=multi-user.target
