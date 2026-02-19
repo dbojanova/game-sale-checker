@@ -5,11 +5,12 @@ Have you ever wanted a game on your Switch ... but didn't want to pay full price
 ## Usage
 
 **REQUIREMENTS**:
-This was setup for my personal Telegram bot. If you'd like to use this repo, you must create a Telegram bot and obtain a token and chat ID that you will store locally in a `.env` file as such:
+This was setup for my personal Telegram bot. If you'd like to use this repo, you must create a Telegram bot and obtain a token and chat ID(s). The scripts assume a group chat for notifications and DM with the bot for watchlist edits. Store keys in a `.env` file as such:
 
 ```.env
 TELEGRAM_TOKEN="TOKEN_NUMBER" 
-TELEGRAM_CHAT_ID="CHAT_NUMBER"
+TELEGRAM_CHAT_EDITS="DM_CHAT_NUMBER"
+TELEGRAM_CHAT_ANNOUNCEMENTS="GROUP_CHAT_NUMBER"
 ```
 
 ### Add/remove games to watchlist
