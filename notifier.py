@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 TOKEN = os.getenv("TELEGRAM_TOKEN")
-CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ANNOUNCEMENTS")
 
 def send_notification(message):
 	url=f"https://api.telegram.org/bot{TOKEN}/sendMessage"
