@@ -1,0 +1,1 @@
+0 * * * * cd ~/game-sale-checker && python nintendo_checker.py
