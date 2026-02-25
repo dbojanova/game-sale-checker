@@ -19,52 +19,40 @@ async def add(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = " ".join(context.args)
     results = search_nintendo_id(query)
     if not results:
-        await update.message.reply_text(
-            "No results found. Add manually?\n"
-            "Reply with: manual <title> | <nsuid>\n"
-            "Or reply 'cancel' to abort."
-        )
-        context.user_data["awaiting_manual"] = True
+        await update.message.reply_text("No results found - check spelling.")
         return
-    response = "Pick a game:\n"
+    response = "Pick a game (or multiple, e.g. 1,3 — or 0 to cancel):\n"
     for i, game in enumerate(results):
         response += f"{i+1}. {game['title']} (nsuid: {game['nsuid']})\n"
     context.user_data["results"] = results
     await update.message.reply_text(response)
 
 async def pick(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if context.user_data.get("awaiting_manual"):
-        if update.message.text.lower() == "cancel":
-            context.user_data["awaiting_manual"] = False
-            await update.message.reply_text("Cancelled.")
-            return
-        try:
-            text = update.message.text
-            title, nsuid = [x.strip() for x in text.replace("manual ", "").split("|")]
-            watchlist = load_watchlist()
-            watchlist.append({"title": title, "nsuid": nsuid})
-            with open(WATCH_FILE, "w") as f:
-                json.dump(watchlist, f, indent=2)
-            context.user_data["awaiting_manual"] = False
-            await update.message.reply_text(f"Added {title} to watchlist!")
-        except ValueError:
-            await update.message.reply_text("Format: manual <title> | <nsuid>")
+    if not is_group(update):
         return
     results = context.user_data.get("results")
     if not results:
         await update.message.reply_text("Search for a game first with /add")
         return
-    try:
-        choice = int(update.message.text) - 1
-        selected = results[choice]
-    except (ValueError, IndexError):
-        await update.message.reply_text("Invalid choice.")
+    text = update.message.text.strip()
+    if text == "0":
+        context.user_data["results"] = None
+        await update.message.reply_text("Cancelled.")
         return
-    watchlist = load_watchlist()
-    watchlist.append({"title": selected["title"], "nsuid": selected["nsuid"]})
-    with open(WATCH_FILE, "w") as f:
-        json.dump(watchlist, f, indent=2)
-    await update.message.reply_text(f"Added {selected['title']} to watchlist!")
+    try:
+        watchlist = load_watchlist()
+        added = []
+        for choice in text.split(","):
+            index = int(choice.strip()) - 1
+            selected = results[index]
+            watchlist.append({"title": selected["title"], "nsuid": selected["nsuid"]})
+            added.append(selected["title"])
+        with open(WATCH_FILE, "w") as f:
+            json.dump(watchlist, f, indent=2)
+        context.user_data["results"] = None
+        await update.message.reply_text("Added:\n" + "\n".join(added))
+    except (ValueError, IndexError):
+        await update.message.reply_text("Invalid choice — send numbers like 1 or 1,3")
 
 async def list_games(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_group(update):
