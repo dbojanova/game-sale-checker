@@ -5,7 +5,7 @@ from add_games import load_watchlist
 from notifier import send_notification
 
 WATCH_FILE = "watchlist.json"
-SEEN_FILE = "checked.json"
+SEEN_FILE = "seen.json"
 
 def load_seen():
     if not os.path.exists(SEEN_FILE):
